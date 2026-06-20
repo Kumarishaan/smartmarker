@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from app.models import Reminder
 from fastapi import HTTPException
 from .enums import ReminderStatus
+from datetime import datetime
+
 
 def create_reminder(db, reminder):
 
@@ -78,6 +80,24 @@ def update_reminder(
 
     for key, value in update_data.items():
         setattr(reminder_db, key, value)
+
+    # -----------------------------
+    # Reset status if reminder is rescheduled
+    # into the future
+    # -----------------------------
+    reminder_datetime = datetime.strptime(
+        f"{reminder_db.date} {reminder_db.time}",
+        "%Y-%m-%d %H:%M"
+    )
+
+    if (
+        reminder_datetime > datetime.now()
+        and reminder_db.status not in [
+            ReminderStatus.completed.value,
+            ReminderStatus.cancelled.value
+        ]
+    ):
+        reminder_db.status = ReminderStatus.pending.value    
 
     db.commit()
     db.refresh(reminder_db)

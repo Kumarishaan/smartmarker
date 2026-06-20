@@ -4,10 +4,13 @@ from .routes import reminders
 
 from .database import engine
 from .database import Base
+from .scheduler import scheduler
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+scheduler.start()
 
 @app.get("/")
 def home():
