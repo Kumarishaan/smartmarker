@@ -6,3 +6,5 @@ venv/
 smtmarker/
 .idea/
 .vscode/
+reminders.db
+test_email.py
