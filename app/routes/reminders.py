@@ -8,7 +8,7 @@ from .. import crud
 from ..enums import ReminderStatus
 from .users import get_current_logged_in_user
 
-router = APIRouter()
+router = APIRouter(tags=["Reminders"])
 
 def get_db():
 

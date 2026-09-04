@@ -14,7 +14,7 @@ from fastapi.security import OAuth2PasswordBearer
 from ..security import verify_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
-router = APIRouter()
+router = APIRouter(tags=["users"])
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="login"

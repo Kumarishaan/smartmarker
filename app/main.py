@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from .routes import reminders
 from .routes import users
+from .routes import agent_route
 from .database import engine
 from .database import Base
 from .scheduler import scheduler
@@ -20,3 +21,4 @@ def home():
 
 app.include_router(reminders.router)
 app.include_router(users.router)
+app.include_router(agent_route.router)

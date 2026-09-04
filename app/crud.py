@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import Reminder
 from fastapi import HTTPException
 from .enums import ReminderStatus
-from datetime import datetime
+from datetime import datetime, date
 from . import schemas
 from . import models
 from .security import hash_password
@@ -206,3 +206,27 @@ def get_user_by_id(
         .first()
 
     )
+
+
+def get_my_reminders(
+    db: Session,
+    user_id: int,
+    reminder_date: date | None = None,
+    status: ReminderStatus | None = None
+):
+    query = db.query(Reminder).filter(
+        Reminder.user_id == user_id
+    )
+
+    if reminder_date is not None:
+        query = query.filter(
+            Reminder.date == str(reminder_date)
+        )
+
+    if status is not None:
+        query = query.filter(
+            Reminder.status == status.value
+        )
+
+    return query.all()
+
