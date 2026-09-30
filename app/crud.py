@@ -6,6 +6,8 @@ from datetime import datetime, date
 from . import schemas
 from . import models
 from .security import hash_password
+from uuid import uuid4
+from app.models import Conversation
 
 def create_reminder(db, reminder, user_id: int):
 
@@ -71,7 +73,6 @@ def update_reminder(
     reminder_update,
     user_id: int
 ):
-    
     reminder_db = db.query(Reminder).filter(
         Reminder.id == reminder_id,
         Reminder.user_id == user_id
@@ -81,7 +82,7 @@ def update_reminder(
         raise HTTPException(
             status_code=404,
             detail=f"Reminder {reminder_id} does not exist"
-        )   
+        )
 
     update_data = reminder_update.model_dump(
         exclude_unset=True
@@ -94,27 +95,29 @@ def update_reminder(
             setattr(reminder_db, key, value)
 
     # -----------------------------
-    # Reset status if reminder is rescheduled
-    # into the future
+    # Reset status if reminder is
+    # rescheduled into the future
     # -----------------------------
-    reminder_datetime = datetime.strptime(
-        f"{reminder_db.date} {reminder_db.time}",
-        "%Y-%m-%d %H:%M:%S"
-    )
+    if reminder_db.date is not None and reminder_db.time is not None:
 
-    if (
-        reminder_datetime > datetime.now()
-        and reminder_db.status not in [
-            ReminderStatus.completed.value,
-            ReminderStatus.cancelled.value
-        ]
-    ):
-        reminder_db.status = ReminderStatus.pending.value    
+        reminder_datetime = datetime.strptime(
+            f"{reminder_db.date} {reminder_db.time}",
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        if (
+            reminder_datetime > datetime.now()
+            and reminder_db.status not in [
+                ReminderStatus.completed.value,
+                ReminderStatus.cancelled.value
+            ]
+        ):
+            reminder_db.status = ReminderStatus.pending.value
 
     db.commit()
     db.refresh(reminder_db)
 
-    return reminder_db    
+    return reminder_db   
 
 
 
@@ -229,4 +232,40 @@ def get_my_reminders(
         )
 
     return query.all()
+
+
+
+def create_conversation(db: Session, user_id: int):
+    thread_id = str(uuid4())
+
+    conversation = Conversation(
+        thread_id=thread_id,
+        user_id=user_id
+    )
+
+    db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
+
+    return conversation
+
+
+
+def get_conversation(
+    db: Session,
+    thread_id: str,
+    user_id: int
+):
+    conversation = db.query(Conversation).filter(
+        Conversation.thread_id == thread_id,
+        Conversation.user_id == user_id
+    ).first()
+
+    if conversation is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found"
+        )
+
+    return conversation
 

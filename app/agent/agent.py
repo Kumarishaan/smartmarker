@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from app.agent.tools import get_create_reminder_tool
+
 
 load_dotenv()
 
@@ -10,7 +10,13 @@ llm = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite"
 )
 
-response = llm.invoke("Say hello in one sentence.")
+from typing import Literal
+from pydantic import BaseModel
 
-print(response.content)
+
+class ApprovalDecision(BaseModel):
+    decision: Literal["approve", "reject", "unclear"]
+
+
+approval_llm = llm.with_structured_output(ApprovalDecision)
 

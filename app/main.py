@@ -7,9 +7,21 @@ from .database import engine
 from .database import Base
 from .scheduler import scheduler
 
+from contextlib import asynccontextmanager
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
+from app.database import DATABASE_URL
+
+
+@asynccontextmanager
+async def lifespan(app):
+    async with AsyncPostgresSaver.from_conn_string(DATABASE_URL) as checkpointer:
+        app.state.checkpointer = checkpointer
+        yield
+
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 scheduler.start()
 
